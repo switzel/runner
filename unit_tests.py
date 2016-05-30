@@ -9,7 +9,7 @@ class RunnerTest(unittest.TestCase):
     def setUp(self):
         self.motd = tempfile.NamedTemporaryFile(mode = 'w+')
         self.queue = tempfile.mkdtemp()
-        self.runner = runner.Runner(motd = self.motd.name, queue_file = self.queue)
+        self.runner = runner.Runner(motd = self.motd.name, queue = self.queue)
     
     def tearDown(self):
         self.motd.close()
@@ -79,7 +79,7 @@ class RunnerTest(unittest.TestCase):
     def test_does_remember_jobs(self):
         with tempfile.NamedTemporaryFile(mode = 'r') as outfile:
             self.runner.add_job('echo "%d" >> %s\n' % (0, outfile.name))
-            self.runner = runner.Runner(motd = self.motd, queue_file = self.queue)
+            self.runner = runner.Runner(motd = self.motd, queue = self.queue)
             self.runner.should_cancel = self.cancel_at([])
 
             self.runner.run()
