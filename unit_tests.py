@@ -7,19 +7,19 @@ import os
 class RunnerTest(unittest.TestCase):
 
     def setUp(self):
-        self.motd = tempfile.NamedTemporaryFile(mode = 'w+')
         self.queue = tempfile.mkdtemp()
-        self.runner = runner.Runner(motd = self.motd.name, queue = self.queue)
+        self.cancel_file = tempfile.NamedTemporaryFile(mode = 'w+')
+        self.runner = runner.Runner(cancel = 'cat %s' % self.cancel_file.name, queue = self.queue)
     
     def tearDown(self):
-        self.motd.close()
+        self.cancel_file.close()
         os.system('rm -r %s' % self.queue)
 
-    def write_motd(self, s):
-        self.motd.seek(0)
-        self.motd.truncate()
-        self.motd.file.write(s)
-        self.motd.seek(0)
+    def write_cancel(self, s):
+        self.cancel_file.seek(0)
+        self.cancel_file.truncate()
+        self.cancel_file.file.write(s)
+        self.cancel_file.seek(0)
 
     def cancel_at(self, r):
         count = 0
@@ -42,12 +42,12 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(result, '0\n')
 
     def test_recognizes_cancel(self):
-        self.write_motd('Welcome\nNeeds reboot')
+        self.write_cancel('reboot')
         
         self.assertTrue(self.runner.should_cancel())
 
     def test_recognizes_no_cancel(self):
-        self.write_motd('Welcome')
+        self.write_cancel('')
         
         self.assertTrue(not self.runner.should_cancel())
 
@@ -79,7 +79,7 @@ class RunnerTest(unittest.TestCase):
     def test_does_remember_jobs(self):
         with tempfile.NamedTemporaryFile(mode = 'r') as outfile:
             self.runner.add_job('echo "%d" >> %s\n' % (0, outfile.name))
-            self.runner = runner.Runner(motd = self.motd, queue = self.queue)
+            self.runner = runner.Runner(cancel = 'cat %s' % self.cancel_file.name, queue = self.queue)
             self.runner.should_cancel = self.cancel_at([])
 
             self.runner.run()
