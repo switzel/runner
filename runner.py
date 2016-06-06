@@ -33,7 +33,7 @@ class Runner:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Simple process queue')
     parser.add_argument('--queue', type = str, default = 'run_queue', help = 'Folder name for the queue')
-    parser.add_argument('--cancel', type = str, default = 'echo ""', help = 'Command to determine when to cancel')
+    parser.add_argument('--cancel', type = str, default = 'echo -n ""', help = 'Command to determine when to cancel')
     parser.add_argument('--tasks', type = str, help = 'Read list of tasks from this file rather than from stdin')
     parser.add_argument('--no-run', action = 'store_true', help = 'Quit after adding tasks to queue')
     args = parser.parse_args()
