@@ -54,7 +54,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     runner = Runner(cancel = args.cancel, queue = args.queue)
     try:
-        with open(args.task,'r') as task_file:
+        with open(args.tasks,'r') as task_file:
             for line in task_file:
                 runner.add_job(line)
     except AttributeError:
