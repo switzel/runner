@@ -53,11 +53,11 @@ if __name__ == '__main__':
     parser.add_argument('--no-run', action = 'store_true', help = 'Quit after adding tasks to queue')
     args = parser.parse_args()
     runner = Runner(cancel = args.cancel, queue = args.queue)
-    try:
+    if args.tasks:
         with open(args.tasks,'r') as task_file:
             for line in task_file:
                 runner.add_job(line)
-    except AttributeError:
+    else:
         for line in sys.stdin:
             runner.add_job(line)
     if not args.no_run:
