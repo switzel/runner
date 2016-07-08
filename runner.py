@@ -1,17 +1,24 @@
 import os
 import sys
 import argparse
+import signal
 from queuelib import FifoDiskQueue
 
 class Runner:
-    def __init__(self, cancel, queue ='queue'):
-        self.cancel = cancel
+    def __init__(self, cancel_command, queue ='queue'):
+        self.cancel_command = cancel_command
         self.queue = queue
+        self.cancel = False
 
-    def should_cancel(self):
-        with os.popen(self.cancel,'r') as cancel:
-            result = cancel.read(2)
+    def query_cancel(self):
+        if self.cancel:
+            return True
+        with os.popen(self.cancel_command,'r') as cancel_command:
+            result = cancel_command.read(2)
         return result != ''
+
+    def do_cancel(self):
+        self.cancel = True
 
     def add_job(self, s):
         queue = FifoDiskQueue(self.queue)
@@ -21,7 +28,7 @@ class Runner:
     def run(self):
         queue = FifoDiskQueue(self.queue)
         while True:
-            if self.should_cancel():
+            if self.query_cancel():
                 break
             qe = queue.pop()
             if qe == None:
@@ -52,7 +59,7 @@ if __name__ == '__main__':
     parser.add_argument('--tasks', type = str, help = 'Read list of tasks from this file rather than from stdin')
     parser.add_argument('--no-run', action = 'store_true', help = 'Quit after adding tasks to queue')
     args = parser.parse_args()
-    runner = Runner(cancel = args.cancel, queue = args.queue)
+    runner = Runner(cancel_command = args.cancel, queue = args.queue)
     if args.tasks:
         with open(args.tasks,'r') as task_file:
             for line in task_file:
@@ -61,8 +68,8 @@ if __name__ == '__main__':
         for line in sys.stdin:
             runner.add_job(line)
     if not args.no_run:
+        def handler(signum, frame):
+            if signum == signal.SIGTERM:
+                runner.do_cancel()
+        signal.signal(signal.SIGTERM, handler)
         runner.run()
-
-    
-
-
